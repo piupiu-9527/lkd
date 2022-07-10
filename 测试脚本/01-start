@@ -1,0 +1,1 @@
+docker start consulServer redis db xxl-job-admin emqx

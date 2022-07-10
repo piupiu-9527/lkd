@@ -1,0 +1,148 @@
+@hostname = 127.0.0.1
+#lkd-java.itheima.net
+#47.92.101.139
+@port=9007
+@contentType=application/json
+
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2MTI0NDY0ODAsIm1vYmlsZSI6IjEzODAwMDAwMDAwIiwidXNlcklkIjoxLCJsb2dpblR5cGUiOjAsImV4cCI6MTYxMjQ0NjQ4MH0.fmFdhhj7gS4dp8weMx-du461cbgZlqiE-42x_k9KxBY
+
+
+####创建合作商##########
+POST http://{{hostname}}:{{port}}/partner HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "name":"测试合作商",
+    "contact":"张三",
+    "ratio":15,
+    "mobile":"13800000000"
+}
+
+
+####修改合作商##########
+PUT http://{{hostname}}:{{port}}/partner/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "name":"测试合作商",
+    "contact":"张三",
+    "ratio":15,
+    "mobile":"13800000000"
+}
+
+####获取合作商详情######
+GET http://{{hostname}}:{{port}}/partner/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####删除合作商######
+DELETE http://{{hostname}}:{{port}}/partner/3 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+######搜索合作商#######
+
+GET http://{{hostname}}:{{port}}/partner/search HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####重置合作商密码######
+PUT http://{{hostname}}:{{port}}/partner/resetPwd/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######更新密码#####
+PUT http://{{hostname}}:{{port}}/partner/updatePwd/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "password":"123456",
+    "newPassword":"654321"
+}
+####获取图片验证码####
+GET http://{{hostname}}:{{port}}/user-service/user/imageCode/11111 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+##################################
+###########合作商后台##############
+##################################
+
+#########合作商登录######
+POST http://{{hostname}}:{{port}}/user-service/user/login HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "account":"13800000000",
+    "password":"123456",
+    "code":"wy83",
+    "clientToken":"11111",
+    "loginType":2
+}
+
+####当日营收统计####
+GET http://{{hostname}}:{{port}}/order-service/report/currentDayCollect/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取合作商一定日期范围的收益情况####
+GET http://{{hostname}}:{{port}}/order-service/report/collectReport/1/2021-01-19/2021-01-25 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取本周之内的订单数情况####
+GET http://{{hostname}}:{{port}}/order-service/report/currentWeekOrderCount/1/2020-11-23 00:00:00/2020-11-29 00:00:00 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取本周收入总情况####
+GET http://{{hostname}}:{{port}}/order-service/report/currentWeekAmount/1/2020-11-23 00:00:00/2020-11-29 00:00:00 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取一定时间范围之内的订单总数###
+GET http://{{hostname}}:{{port}}/order-service/report/orderCount?partnerId=1&start=2020-11-25 00:00:00&end=2021-11-26 00:00:00 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+###获取一定时间范围之内的销售额##
+GET http://{{hostname}}:{{port}}/order-service/report/orderAmount?partnerId=1&start=2021-01-01 00:00:00&end=2021-11-26 23:59:59 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取一定时间范围之内的分成总计####
+GET http://{{hostname}}:{{port}}/order-service/report/totalBill?partnerId=1&start=2020-10-01%00:00:00&end=2020-11-26%23:59:59 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+###获取一定时间范围之内的收入同比##
+GET http://{{hostname}}:{{port}}/order-service/report/amountInfo/1/2020-11-23 00:00:00/2020-11-29 00:00:00 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####获取最近12条分账信息####
+GET http://{{hostname}}:{{port}}/order-service/report/top12Collect/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+####合作商搜索分账信息######
+GET http://{{hostname}}:{{port}}/order-service/report/search/1?start=2020-01-01&end=2021-12-31 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取一定日期范围之内的合作商分成汇总数据####
+GET http://{{hostname}}:{{port}}/order-service/report/partnerCollect?start=2020-01-01&end=2020-12-31 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+###获取一定时间范围之内的收入同比##
+GET http://{{hostname}}:{{port}}/order-service/report/export/1/2020-11-23/2020-11-29 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}

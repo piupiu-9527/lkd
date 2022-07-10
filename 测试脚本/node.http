@@ -1,0 +1,47 @@
+@hostname = localhost
+#lkd-java.itheima.net
+#47.92.101.139
+@port=9004
+@contentType=application/json
+
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE1NzUwMTkyMjgsInVzZXJOYW1lIjoi566h55CG5ZGYIiwidXNlcklkIjoxLCJyb2xlQ29kZSI6IjEwMDAiLCJjb21wYW55SWQiOjAsImV4cCI6MTU3NTAxOTIyOH0.Wtkzbne0zR72Ej_9v0U8S29gRnncw5vKn9g_pATwjKs
+
+#####根据Id获取点位######
+GET http://{{hostname}}:{{port}}/node/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####新增点位#######
+POST http://{{hostname}}:{{port}}/node HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "name":"中山商场",
+    "addr":"测试中",
+    "areaId":3592,
+    "createUserId":"1",
+    "regionId":"1",
+    "businessId":1,
+    "ownerId":"1"
+}
+
+#########搜索点位#####
+GET http://{{hostname}}:{{port}}/node/query HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######更新点位信息###########
+PUT http://{{hostname}}:{{port}}/node/2 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "name":"test",
+    "addr":"测试中",
+    "areaId":3592,
+    "createUserId":"1",
+    "regionId":"1",
+    "businessId":2,
+    "ownerId":"2"
+}

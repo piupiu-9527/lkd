@@ -1,0 +1,12 @@
+@hostname = 172.17.0.87
+#lkd-java.itheima.net
+#47.92.101.139
+@port=9007
+@contentType=application/json
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2MDY0NjkyMDEsInVzZXJOYW1lIjoi5byg5LiJIiwibW9iaWxlIjoiMTM1NTIwNDcxODciLCJ1c2VySWQiOjQsInJvbGVDb2RlIjoiMTAwMiIsInJlZ2lvbklkIjoiMSIsImxvZ2luVHlwZSI6MSwiZXhwIjoxNjA2NDY5MjAxfQ.7oL3ittMztLibIDCEvnhizEK8zxWiecQgL69BRc9PEc
+
+#######获取维修员数量#####
+
+GET http://{{hostname}}:{{port}}/user-service/user/search HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}

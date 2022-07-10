@@ -1,0 +1,95 @@
+@hostname = 127.0.0.1
+#lkd-java.itheima.net
+#47.92.101.139
+@port = 9004
+@contentType = application/json
+
+@tokenValue = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2NTMxMjcyODQsIm1vYmlsZSI6IjEzODAwMDAwMDAwIiwidXNlcklkIjoxLCJsb2dpblR5cGUiOjAsImV4cCI6MTY1MzEyNzI4NH0.L3WNqfw9Nfs5RI9C0w5cOUVObQcH292AwPdByVNDrxg
+
+#####根据Id获取售货机信息######
+GET http://{{hostname}}:{{port}}/vm/80 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####创建售货机######
+POST  http://{{hostname}}:{{port}}/vm HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "vmType":2,
+    "nodeId":"2",
+    "createUserId":"1",
+    "ownerId":"1",
+    "ownerName":"测试"
+}
+
+#######根据Id获取售货机########
+GET http://{{hostname}}:{{port}}/vm/2 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######根据InnerCode获取售货机########
+GET http://{{hostname}}:{{port}}/vm/vmInfo/01000001 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+######更新点位信息###
+PUT http://{{hostname}}:{{port}}/vm/2/2 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####分页查询#######
+GET http://{{hostname}}:{{port}}/vm/query?status=0 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####售货机类型列表获取#######
+GET http://{{hostname}}:{{port}}/vm/allTypes HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取售货机商品列表#######
+GET http://{{hostname}}:{{port}}/vm/skuList/01000002 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#####应用策略#######
+PUT  http://{{hostname}}:{{port}}/vm/applyPolicy
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "innerCodeList":["01000001"],
+    "policyId":1
+}
+
+#####应用策略#######
+PUT  http://{{hostname}}:{{port}}/vm/1/1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####设置售货机经纬度信息####
+
+PUT  http://{{hostname}}:{{port}}/vm/distance
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "innerCode":"01000001",
+    "lat":39.987282,
+    "lon":116.355545
+}
+
+
+####搜索附近售货机####
+POST http://{{hostname}}:{{port}}/vm/search
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "lat":39.987282,
+    "lon":116.350195,
+    "distance":1000
+}

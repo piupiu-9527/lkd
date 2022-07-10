@@ -1,0 +1,86 @@
+@hostname = 127.0.0.1
+#localhost
+#lkd-java.itheima.net
+#47.92.101.139
+@port=9007
+#9006
+@contentType=application/json
+
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2NTcyNjc2NjUsIm1vYmlsZSI6IjEzODAwMDAwMDAwIiwidXNlcklkIjoxLCJsb2dpblR5cGUiOjAsImV4cCI6MTY1NzI2NzY2NX0.ZUD4DjeBNx8HT1MrEsi4BbIPpscaINEjWkWlQJqqyf0
+
+####获取图片验证码####
+GET http://{{hostname}}:{{port}}/user-service/user/imageCode/11111 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+####管理员登录####
+POST http://{{hostname}}:{{port}}/user-service/user/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "loginName":"admin",
+    "password":"admin",
+    "code":"dd4y",
+    "clientToken":"11111",
+    "loginType":0
+}
+
+
+#####生成短信验证码####
+GET http://{{hostname}}:{{port}}/user-service/user/code/13800000000 HTTP/1.1
+Content-Type: {{contentType}}
+
+
+#####获取Id为1的用户######
+GET http://{{hostname}}:{{port}}/user-service/user/1 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####创建用户##########
+POST http://{{hostname}}:{{port}}/user-service/user HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "userName":"王五",
+    "roleId":3,
+    "mobile":"13700000001",
+    "regionId":"1",
+    "regionName":"第一个区域",
+    "status":true
+}
+
+#######获取维修员数量#####
+
+GET http://{{hostname}}:{{port}}/user-service/user/repairerCount HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######获取运营员数量#####
+
+GET http://{{hostname}}:{{port}}/user-service/user/operaterCount HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######通过设备获取同一区域下维修员####
+GET http://{{hostname}}:{{port}}/user-service/user/repairerList/01000001
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+#######通过设备获取同一区域下运营员####
+GET http://{{hostname}}:{{port}}/user-service/user/operatorList/01000001
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+#####获取所有角色列表######
+GET http://{{hostname}}:{{port}}/user-service/role HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+######人员搜索#######
+GET http://{{hostname}}:{{port}}/user-service/user/search HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+

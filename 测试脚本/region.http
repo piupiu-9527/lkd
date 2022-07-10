@@ -1,0 +1,24 @@
+@hostname = localhost
+#lkd-java.itheima.net
+#47.92.101.139
+@port=9004
+@contentType=application/json
+
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE1NzUwMTkyMjgsInVzZXJOYW1lIjoi566h55CG5ZGYIiwidXNlcklkIjoxLCJyb2xlQ29kZSI6IjEwMDAiLCJjb21wYW55SWQiOjAsImV4cCI6MTU3NTAxOTIyOH0.Wtkzbne0zR72Ej_9v0U8S29gRnncw5vKn9g_pATwjKs
+
+#####设置货道商品######
+POST  http://{{hostname}}:{{port}}/region HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "regionName":"测试添加",
+    "remark":"测试",
+    "nodeIdList":["1","2"]
+}
+
+#####分页查询区域######
+
+GET http://{{hostname}}:{{port}}/region/search HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}

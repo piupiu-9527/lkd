@@ -1,0 +1,40 @@
+@hostname=127.0.0.1
+#lkd2-java.itheima.net
+#172.17.0.87
+#lkd-java.itheima.net
+#47.92.101.139
+@port=
+#9010
+@contentType=application/json;charset=utf-8
+@tokenValue=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE1NzUwMTkyMjgsInVzZXJOYW1lIjoi566h55CG5ZGYIiwidXNlcklkIjoxLCJyb2xlQ29kZSI6IjEwMDAiLCJjb21wYW55SWQiOjAsImV4cCI6MTU3NTAxOTIyOH0.Wtkzbne0zR72Ej_9v0U8S29gRnncw5vKn9g_pATwjKs
+
+#####订单搜索######
+GET https://{{hostname}}/microapp-api/order/search?pageIndex=1&pageSize=10&openId=oJ9WJ5Ny68WBpTixdVBINlKKasLg&startDate=2020-01-01&endDate=2020-12-31 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+###售货机扫码进入商品详情###
+GET https://{{hostname}}/microapp-api/vm/sku/01000001/2 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####搜索附近售货机####
+POST http://{{hostname}}:{{port}}/microapp-api/vm/search
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "lat":39.987282,
+    "lon":116.350195,
+    "distance":1000
+}
+
+####获取售货机商品列表
+GET https://{{hostname}}/microapp-api/vm/skuList/01000001 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+####获取openId###
+GET https://{{hostname}}/microapp-api/order/openid/091eLd000mh7GK1abi300f6MCx4eLd08 HTTP/1.1
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}

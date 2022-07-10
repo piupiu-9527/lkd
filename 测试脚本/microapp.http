@@ -1,0 +1,39 @@
+@hostname = 127.0.0.1
+#lkd-java.itheima.net
+#47.92.101.139
+@port = 9009
+@contentType = application/json;charset=utf-8
+
+
+
+####下单 ####
+POST http://{{hostname}}:{{port}}/order/requestPay HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "innerCode":"01000001",
+    "openId":"oJ9WJ5MhIS-hiwuUX0GmsHDzqTyQ",
+    "skuId":"2"
+}
+
+
+#####订单搜索######
+GET http://{{hostname}}:{{port}}/order/search?startDate=2020-10-11&endDate=2021-11-18 HTTP/1.1
+Content-Type: {{contentType}}
+
+
+####搜索附近售货机####
+POST http://{{hostname}}:{{port}}/vm/search HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "lat":31.04077,
+    "lon":121.61853,
+    "distance":100
+}
+
+###获取售货机详情###
+GET http://{{hostname}}:{{port}}/vm/innerCode/01000001 HTTP/1.1
+Content-Type: {{contentType}}
+
+

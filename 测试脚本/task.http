@@ -1,0 +1,133 @@
+@hostname = 127.0.0.1
+@port=9007
+@contentType=application/json
+
+@name=login
+
+## @tokenValue = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2NTMyMDUwODcsIm1vYmlsZSI6IjEzODAwMDAwMDAwIiwidXNlcklkIjoxLCJsb2dpblR5cGUiOjAsImV4cCI6MTY1MzIwNTA4N30.WmGjzMBTfPft3ZfbLUhSR4zNoMxM-AEOdty2XPVPDI8
+
+# 曹操
+@tokenValue = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJsa2QiLCJpYXQiOjE2NTczNjE5NTYsIm1vYmlsZSI6IjEzOTAwMDAwMDAxIiwidXNlcklkIjo2LCJsb2dpblR5cGUiOjEsImV4cCI6MTY1NzM2MTk1Nn0.kUAk9M5T6gSwn6S-If5Q0ntc0W8-asmWhjXkexL9mwg
+
+#####生成短信验证码####
+GET http://{{hostname}}:{{port}}/user-service/user/code/13900000001 HTTP/1.1
+Content-Type: {{contentType}}
+
+####运营运维登录####
+POST http://{{hostname}}:{{port}}/user-service/user/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "mobile":"13900000001",
+    "code":"60772",
+    "loginType":1
+}
+
+
+#########operatorList####
+
+GET http://{{hostname}}:{{port}}/userService/user/operatorList
+Authorization: {{tokenValue}}
+
+
+######创建补货工单######################
+POST http://{{hostname}}:{{port}}/task-service/task/create
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "createType":1,
+    "innerCode":"01000001",
+    "userId":6,
+    "productType":2,
+    "details":[
+      {"channelCode":"1-1","expectCapacity":1,"skuId":1,"skuName":"可口可乐"},
+      {"channelCode":"1-2","expectCapacity":2,"skuId":1,"skuName":"可口可乐"}
+    ]
+}
+
+######创建投放工单######################
+POST http://{{hostname}}:{{port}}/task-service/task/create
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "createType":1,
+    "innerCode":"01000001",
+    "userId":8,
+    "productType":1,
+    "desc":"投放"
+}
+
+
+#######接受工单###################
+GET http://{{hostname}}:{{port}}/task-service/task/accept/449
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+
+########取消（拒绝）工单############
+
+POST  http://{{hostname}}:{{port}}/task-service/task/cancel/433
+Authorization: {{tokenValue}}
+Content-Type: {{contentType}}
+
+{
+    "desc":"累了"
+}
+
+
+###完成工单#####
+GET http://{{hostname}}:{{port}}/task-service/task/complete/449 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+
+#########工单列表#####
+GET http://{{hostname}}:{{port}}/task-service/task/search HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+{
+    "userId":0,
+    "start":"2019-01-01 00:00:00",
+    "end":"2019-12-01 00:00:00",
+    "pageIndex": 1,
+    "pageSize": 10
+}
+
+####工单实时汇总###
+GET http://{{hostname}}:{{port}}/task-service/task/taskReportInfo/2021-01-01 00:00:00/2021-01-31 23:59:59 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+#####工作量排名####
+GET http://{{hostname}}:{{port}}/task-service/task/rank/6 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+### 工单状态统计 ####
+GET http://{{hostname}}:{{port}}/task-service/task/collectReport/2020-11-01/2020-11-30 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+####用户工作量####
+GET http://{{hostname}}:{{port}}/task-service/task/userWork?userId=6&start=2021-01-01 00:00:00&end=2021-10-31 00:00:00 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+
+
+####用户工作量列表####
+GET http://{{hostname}}:{{port}}/user-service/user/searchUserWork?pageIndex=1&pageSize=10 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+
+####人效排名月度统计###
+GET http://{{hostname}}:{{port}}/task-service/task/userWorkTop10/2021-01-01/2021-01-31/true/1339752425761804289 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: {{tokenValue}}
+
+
+
