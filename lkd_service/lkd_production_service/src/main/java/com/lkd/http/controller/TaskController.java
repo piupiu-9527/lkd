@@ -97,6 +97,10 @@ public class TaskController extends  BaseController{
     @PostMapping("/create")
     public boolean create(@RequestBody TaskViewModel task) throws LogicException {
         task.setAssignorId( getUserId() );//设置当前登录用户id为指派人id
+        //判断用户
+        if (!task.getUserId().equals(task.getAssignorId())){
+            throw new LogicException("用户不存在");
+        }
         return taskService.createTask(task);
     }
 
