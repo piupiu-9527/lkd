@@ -216,5 +216,33 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
         return this.getOne(qw);
     }
 
+    @Override
+    @Transactional(rollbackFor = {Exception.class})
+    public boolean supply(SupplyContract supply) {
+        //1、更新最后补货时间
+        UpdateWrapper<VendingMachineEntity> uw = new UpdateWrapper<>();
+        uw.lambda()
+                .eq(VendingMachineEntity::getInnerCode, supply.getInnerCode())
+                .set(VendingMachineEntity::getLastSupplyTime, LocalDateTime.now());
+        this.update(uw);
+
+        //2、从数据库中查询当前售货机的所有货道
+        List<ChannelEntity> channelList = channelService.getChannelesByInnerCode(supply.getInnerCode());
+        supply.getSupplyData().forEach(c -> {
+            //通过stream流筛选货道，比在数据库中查询性能高
+            Optional<ChannelEntity> item = channelList.stream()
+                    .filter(channel -> channel.getChannelCode().equals(c.getChannelId()))
+                    .findFirst();
+            if (item.isPresent()) { //找到了并且不为空
+                var channelEntity = item.get();
+                //更新货道库存：之前的库存 + 本次补货的数量
+                channelEntity.setCurrentCapacity(channelEntity.getCurrentCapacity() + c.getCapacity());
+                //更新货道最后补货时间
+                channelEntity.setLastSupplyTime(LocalDateTime.now());
+                channelService.updateById(channelEntity);
+            }
+        });
+        return true;
+    }
 
 }

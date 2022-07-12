@@ -1,5 +1,6 @@
 package com.lkd.service;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lkd.entity.TaskEntity;
 import com.lkd.entity.TaskStatusTypeEntity;
 import com.lkd.exception.LogicException;
@@ -66,5 +67,5 @@ public interface TaskService extends IService<TaskEntity> {
      * @param id
      * @return
      */
-    boolean completeTask(long id);
+    boolean completeTask(long id) ;
 }

@@ -16,6 +16,7 @@
     <modules>
         <module>lkd_common</module>
         <module>lkd_service</module>
+        <module>lkd-test</module>
     </modules>
 
     <packaging>pom</packaging>

@@ -3,12 +3,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.lkd.common.VMSystem;
+import com.lkd.config.TopicConfig;
+import com.lkd.contract.SupplyChannel;
+import com.lkd.contract.SupplyContract;
+import com.lkd.contract.TaskCompleteContract;
 import com.lkd.dao.TaskDao;
+import com.lkd.emq.MqttProducer;
 import com.lkd.entity.TaskDetailsEntity;
 import com.lkd.entity.TaskEntity;
 import com.lkd.entity.TaskStatusTypeEntity;
+import com.lkd.entity.TaskTypeEntity;
 import com.lkd.exception.LogicException;
 import com.lkd.feign.UserService;
 import com.lkd.feign.VMService;
@@ -18,6 +26,7 @@ import com.lkd.http.vo.TaskViewModel;
 import com.lkd.service.TaskDetailsService;
 import com.lkd.service.TaskService;
 import com.lkd.service.TaskStatusTypeService;
+import com.lkd.utils.JsonUtil;
 import com.lkd.vo.Pager;
 import com.lkd.vo.UserVO;
 import com.lkd.vo.VmVO;
@@ -55,6 +64,9 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
 
     @Autowired
     private TaskDetailsService taskDetailsService;
+
+    @Autowired
+    private MqttProducer mqttProducer;
 
 
     @Override
@@ -335,7 +347,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
     }
 
     @Override
-    public boolean completeTask(long id) {
+    public boolean completeTask(long id)  {
         TaskEntity taskEntity = this.getById(id);
         if (taskEntity.getProductTypeId().equals(VMSystem.TASK_STATUS_PROGRESS) ||
                 taskEntity.getProductTypeId().equals(VMSystem.TASK_STATUS_FINISH) ){
@@ -343,7 +355,69 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
         }
         taskEntity.setTaskStatus(VMSystem.TASK_STATUS_FINISH);//修改工单状态
         this.updateById(taskEntity);
+
+        //获取工单类型
+        TaskCompleteContract taskCompleteContract = new TaskCompleteContract();
+        taskCompleteContract.setTaskType(taskEntity.getProductTypeId());
+        taskCompleteContract.setInnerCode(taskEntity.getInnerCode());
+
+        //判断是否是运维工单
+        //if (taskCompleteContract.getTaskType() == VMSystem.TASK_TYPE_DEPLOY) {
+        if (taskEntity.getProductTypeId().equals(VMSystem.TASK_TYPE_DEPLOY)
+                || taskEntity.getProductTypeId().equals(VMSystem.TASK_TYPE_REVOKE)) {
+
+            /*//获取工单类型
+            TaskCompleteContract taskCompleteContract = new TaskCompleteContract();
+            taskCompleteContract.setTaskType(taskEntity.getProductTypeId());
+            taskCompleteContract.setInnerCode(taskEntity.getInnerCode());*/
+
+            try {
+                mqttProducer.send(TopicConfig.VMS_COMPLETED_TOPIC,2, JsonUtil.serialize(taskCompleteContract));
+            } catch (JsonProcessingException e) {
+                throw new LogicException("发送工单协议出错");
+            }
+        }
+
+        //如果是补货工单!
+        if(taskEntity.getProductTypeId().equals(VMSystem.TASK_TYPE_SUPPLY)){
+            noticeVMServiceSupply(taskEntity);
+        }
         return true;
+    }
+
+    /**
+     * @description: 补货协议的封装和下发
+     * @author Zle
+     * @date 2022/7/12 19:54
+     * @param taskEntity taskEntity
+     */
+    private void noticeVMServiceSupply(TaskEntity taskEntity) {
+        //协议内容封装
+        //1.根据工单id查询工单明细表
+        LambdaQueryWrapper<TaskDetailsEntity> lambdaQueryWrapper = new LambdaQueryWrapper<TaskDetailsEntity>();
+        lambdaQueryWrapper.eq(TaskDetailsEntity::getTaskId,taskEntity.getTaskId());
+        List<TaskDetailsEntity> details = taskDetailsService.list(lambdaQueryWrapper);
+        //构建协议 内容
+        SupplyContract supplyContract = new SupplyContract();
+        supplyContract.setInnerCode(taskEntity.getInnerCode());//售货机编号
+        List<SupplyChannel> supplyChannels = Lists.newArrayList();//guava中的lists方法 补货数据
+        //从工单明细表提取数据加到补货数据中
+        details.forEach(d ->{
+            SupplyChannel channel = new SupplyChannel();
+            channel.setChannelId(d.getChannelCode());//货道编号
+            channel.setCapacity(d.getExpectCapacity());//补货数量
+            supplyChannels.add(channel);
+        });
+        supplyContract.setSupplyData(supplyChannels);
+
+        //下发补货协议
+        //发送到emq
+        try {
+            mqttProducer.send( TopicConfig.VMS_SUPPLY_TOPIC,2, supplyContract );
+        } catch (Exception e) {
+            log.error("发送工单完成协议出错");
+            throw new LogicException("发送工单完成协议出错");
+        }
     }
 
 }

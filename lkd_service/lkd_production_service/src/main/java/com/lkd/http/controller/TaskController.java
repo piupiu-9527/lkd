@@ -1,4 +1,5 @@
 package com.lkd.http.controller;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lkd.entity.TaskDetailsEntity;
 import com.lkd.entity.TaskEntity;
 import com.lkd.entity.TaskStatusTypeEntity;
@@ -97,10 +98,7 @@ public class TaskController extends  BaseController{
     @PostMapping("/create")
     public boolean create(@RequestBody TaskViewModel task) throws LogicException {
         task.setAssignorId( getUserId() );//设置当前登录用户id为指派人id
-        //判断用户
-        if (!task.getUserId().equals(task.getAssignorId())){
-            throw new LogicException("用户不存在");
-        }
+
         return taskService.createTask(task);
     }
 
@@ -134,8 +132,13 @@ public class TaskController extends  BaseController{
      * @return
      */
     @GetMapping("/complete/{taskId}")
-    public boolean complete(@PathVariable("taskId") String taskId    ){
+    public boolean complete(@PathVariable("taskId") String taskId ) throws JsonProcessingException {
         Long id = Long.valueOf(taskId);
+        //判断工单执行人是否为当前登录用户
+        TaskEntity task = taskService.getById(id);
+        if(task.getUserId().intValue()!=getUserId().intValue() ){
+            throw new LogicException("操作非法");
+        }
         return taskService.completeTask(id);
     }
 
