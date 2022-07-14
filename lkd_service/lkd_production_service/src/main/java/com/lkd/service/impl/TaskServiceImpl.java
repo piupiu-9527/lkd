@@ -45,6 +45,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -162,14 +163,31 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
                 taskDetailsService.save(taskDetailsEntity);
             }
 
-
         }
 
-
-
-
+        updateTaskZSet(taskEntity,1);
 
         return true;
+    }
+
+    /**
+     * @description: 更新工单量列表
+     * @author Zle
+     * @date 2022/7/14 14:38
+     * @param taskEntity
+     * @param score
+     */
+    private void updateTaskZSet(TaskEntity taskEntity, int score) {
+        String roleCode = "1003";  //运维
+        if (taskEntity.getProductTypeId().intValue() == 2){  //如果是补货工单
+            roleCode = "1002";  //运营
+        }
+        String key = VMSystem.REGION_TASK_KEY_PREF
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                + "." + taskEntity.getRegionId()
+                + "." + roleCode;
+        //incrementScore 中包含两个操作get score+1  incrementScore方法属于原子增，不用考虑锁
+        redisTemplate.opsForZSet().incrementScore(key,taskEntity.getUserId(),score);
     }
 
     /**
@@ -214,6 +232,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
         if(productType == VMSystem.TASK_TYPE_REVOKE  && !vmStatus.equals(VMSystem.VM_STATUS_RUNNING)){
             throw new LogicException("该设备不在运营状态");
         }
+
+
     }
 
     private String createTaskCode() {
@@ -334,6 +354,14 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
         return this.updateById(task);
     }
 
+    /**
+     * @description: 取消工单
+     * @author Zle
+     * @date 2022/7/14 14:58
+     * @param id
+     * @param cancelVM
+     * @return boolean
+     */
     @Override
     public boolean cancelTask(Long id, CancelTaskViewModel cancelVM) {
         TaskEntity task = this.getById(id);  //查询工单
@@ -343,6 +371,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
         }
         task.setTaskStatus( VMSystem.TASK_STATUS_CANCEL  );
         task.setDesc(cancelVM.getDesc());
+
+        updateTaskZSet(task,-1);
         return this.updateById(task);
     }
 
@@ -383,6 +413,24 @@ public class TaskServiceImpl extends ServiceImpl<TaskDao,TaskEntity> implements 
             noticeVMServiceSupply(taskEntity);
         }
         return true;
+    }
+
+    @Override
+    public int getLeastUser(Long regionId, Boolean isRepair) {
+        String roleCode = "1002";
+        if (isRepair){
+            roleCode = "1003";
+        }
+        String key = VMSystem.REGION_TASK_KEY_PREF
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                + "." + regionId
+                + "." + roleCode;
+        Set<Object> set = redisTemplate.opsForZSet().range(key, 0, 0);
+        if (set == null || set.isEmpty()){
+            return 0;  //没有数据就返回0
+        }
+        //有数据就获取set第一个元素
+        return (Integer) set.toArray()[0];
     }
 
     /**

@@ -68,4 +68,14 @@ public interface TaskService extends IService<TaskEntity> {
      * @return
      */
     boolean completeTask(long id) ;
+
+    /**
+     * @description: 最小工单用户查询
+     * @author Zle
+     * @date 2022/7/14 15:02
+     * @param regionId
+     * @param isRepair
+     * @return int
+     */
+    int getLeastUser(Long regionId,Boolean isRepair);
 }

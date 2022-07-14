@@ -5,14 +5,18 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.lkd.common.VMSystem;
 
+import com.lkd.config.TopicConfig;
+import com.lkd.contract.SupplyChannel;
 import com.lkd.contract.SupplyContract;
 
 import com.lkd.dao.VendingMachineDao;
 
+import com.lkd.emq.MqttProducer;
 import com.lkd.entity.*;
 import com.lkd.exception.LogicException;
 import com.lkd.http.vo.CreateVMReq;
@@ -47,6 +51,9 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
 
     @Autowired
     private VmTypeService vmTypeService;
+    
+    @Autowired
+    private MqttProducer mqttProducer;
 
     @Override
     @Transactional(rollbackFor = {Exception.class})
@@ -216,6 +223,13 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
         return this.getOne(qw);
     }
 
+    /**
+     * @description: 手动补货
+     * @author Zle
+     * @date 2022/7/14 19:21
+     * @param supply
+     * @return boolean
+     */
     @Override
     @Transactional(rollbackFor = {Exception.class})
     public boolean supply(SupplyContract supply) {
@@ -244,5 +258,54 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
         });
         return true;
     }
+
+    /** 
+     * @description: 自动补货
+     * @author Zle
+     * @date 2022/7/14 19:52
+     * @param innerCode
+     */
+    @Override
+    public void sendSupplyTask(String innerCode) {
+        //查询售货机的货道列表(skuId!= 0)
+        QueryWrapper<ChannelEntity> channelQueryWrapper = new QueryWrapper<ChannelEntity>();
+        channelQueryWrapper.lambda()
+                .eq(ChannelEntity::getInnerCode,innerCode) //售货机id
+                .ne(ChannelEntity::getSkuId, 0L);   //SkuId
+        List<ChannelEntity> channelList = channelService.list(channelQueryWrapper);
+
+        //补货列表
+        List<SupplyChannel> supplyChannelList = channelList.stream().filter(c -> c.getCurrentCapacity() < c.getMaxCapacity()) //筛选缺货货道
+                .map(c -> {
+                    SupplyChannel supplyChannel = new SupplyChannel();
+                    supplyChannel.setChannelId(c.getChannelCode()); //货道编号
+                    supplyChannel.setCapacity(c.getMaxCapacity() - c.getCurrentCapacity()); //补货
+                    supplyChannel.setSkuId(c.getSkuId());
+                    if (c.getSku().getSkuName() != null) {
+                        supplyChannel.setSkuName(c.getSku().getSkuName());
+                    }
+                    if (c.getSku().getSkuImage() != null) {
+                        supplyChannel.setSkuImage(c.getSku().getSkuImage());
+                    }
+
+                    return supplyChannel;
+                }).collect(Collectors.toList());
+
+        if (supplyChannelList.size() > 0){
+            //构建补货协议数据
+            SupplyContract supplyContract = new SupplyContract();
+            supplyContract.setInnerCode(innerCode);
+            supplyContract.setSupplyData(supplyChannelList);
+            try {
+                mqttProducer.send(TopicConfig.TASK_SUPPLY_TOPIC,2,supplyContract);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+    }
+
 
 }

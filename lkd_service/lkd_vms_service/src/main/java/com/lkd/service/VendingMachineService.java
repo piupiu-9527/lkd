@@ -89,4 +89,6 @@ public interface VendingMachineService extends IService<VendingMachineEntity> {
 
     public boolean supply(SupplyContract supply);
 
+    void sendSupplyTask(String innerCode);
+
 }
