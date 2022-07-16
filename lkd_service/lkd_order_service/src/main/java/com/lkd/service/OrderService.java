@@ -1,10 +1,11 @@
 package com.lkd.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lkd.vo.PayVO;
+
 import com.lkd.entity.OrderEntity;
 import com.lkd.vo.OrderVO;
 import com.lkd.vo.Pager;
+import com.lkd.vo.PayVO;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface OrderService extends IService<OrderEntity> {
     OrderEntity getByOrderNo(String orderNo);
 
 
-
+    OrderEntity createOrder(PayVO payVO);
 
 
 

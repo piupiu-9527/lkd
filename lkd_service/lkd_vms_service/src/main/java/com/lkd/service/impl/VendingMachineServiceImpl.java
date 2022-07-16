@@ -281,10 +281,8 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
                     supplyChannel.setChannelId(c.getChannelCode()); //货道编号
                     supplyChannel.setCapacity(c.getMaxCapacity() - c.getCurrentCapacity()); //补货
                     supplyChannel.setSkuId(c.getSkuId());
-                    if (c.getSku().getSkuName() != null) {
+                    if (c.getSku() != null) {
                         supplyChannel.setSkuName(c.getSku().getSkuName());
-                    }
-                    if (c.getSku().getSkuImage() != null) {
                         supplyChannel.setSkuImage(c.getSku().getSkuImage());
                     }
 

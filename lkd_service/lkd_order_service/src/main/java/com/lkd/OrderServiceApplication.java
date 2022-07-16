@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableFeignClients
 @EnableTransactionManagement
 @EnableRetry
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.lkd","com.github.wxpay"})
 public class OrderServiceApplication {
 
     public static void main(String[] args) {

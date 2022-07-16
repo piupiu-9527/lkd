@@ -13,18 +13,16 @@ import com.lkd.contract.OrderCheck;
 import com.lkd.contract.VendoutContract;
 import com.lkd.contract.VendoutData;
 import com.lkd.dao.OrderDao;
-import com.lkd.vo.PayVO;
 import com.lkd.emq.MqttProducer;
 import com.lkd.entity.OrderEntity;
 import com.lkd.exception.LogicException;
+import com.lkd.feign.UserService;
 import com.lkd.feign.VMService;
 import com.lkd.service.OrderService;
 import com.lkd.utils.DistributedLock;
 import com.lkd.utils.JsonUtil;
-import com.lkd.vo.OrderVO;
-import com.lkd.vo.Pager;
-import com.lkd.vo.SkuVO;
-import com.lkd.vo.VmVO;
+import com.lkd.utils.UUIDUtils;
+import com.lkd.vo.*;
 import lombok.extern.slf4j.Slf4j;
 
 import org.elasticsearch.action.search.SearchRequest;
@@ -49,6 +47,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -66,5 +66,51 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 .eq(OrderEntity::getOrderNo,orderNo);
         return this.getOne(qw);
     }
+
+    @Autowired
+    private VMService vmService;
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * @description: 添加订单
+     * @author Zle
+     * @date 2022/7/16 14:21
+     * @param payVO
+     * @return Boolean
+     */
+    @Override
+    public OrderEntity createOrder(PayVO payVO) {
+        //通过远程调用vmService.hasCapacity 判断是否有库存 。
+        Boolean aBoolean = vmService.hasCapacity(payVO.getInnerCode(), Long.valueOf(payVO.getSkuId()));
+        if (!aBoolean){
+            throw new LogicException("库存不足");
+        }
+        //构建实体类OrderEntity，售货机相关信息通过 vmService.getVMInfo获得。
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderNo(payVO.getInnerCode()+UUIDUtils.getUUID());
+        orderEntity.setOpenId(payVO.getOpenId());
+        orderEntity.setPayStatus(VMSystem.PAY_STATUS_NOPAY);
+        VmVO vmInfo = vmService.getVMInfo(payVO.getInnerCode());
+        BeanUtils.copyProperties(vmInfo,orderEntity);
+        orderEntity.setAddr(vmInfo.getNodeAddr());
+        //构建实体类OrderEntity，商品相关信息通过 vmService.getSku获得
+        SkuVO sku = vmService.getSku(payVO.getSkuId());
+        BeanUtils.copyProperties(sku,orderEntity);
+        orderEntity.setAmount(sku.getRealPrice());
+        orderEntity.setStatus(VMSystem.ORDER_STATUS_CREATE);
+
+        //通过userService.getPartner 获得合作商，使用提成比例计算分成。
+        PartnerVO partner = userService.getPartner(vmInfo.getOwnerId());
+        //orderEntity.setBill(partner.getRatio() * sku.getPrice() /100);
+        BigDecimal bg = new BigDecimal(sku.getRealPrice());
+        int bill = bg.multiply(new BigDecimal(partner.getRatio())).divide(new BigDecimal(100),0, RoundingMode.HALF_UP).intValue();
+        orderEntity.setBill(bill);
+        //保存实体类。返回参数为订单实体类
+        this.save(orderEntity);
+        return orderEntity;
+    }
+
 
 }
