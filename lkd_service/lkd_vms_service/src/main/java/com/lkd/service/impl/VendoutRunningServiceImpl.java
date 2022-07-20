@@ -1,15 +1,25 @@
 package com.lkd.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lkd.config.TopicConfig;
+import com.lkd.contract.VendoutContract;
 import com.lkd.dao.VendoutRunningDao;
+import com.lkd.emq.MqttProducer;
+import com.lkd.entity.ChannelEntity;
 import com.lkd.entity.VendoutRunningEntity;
+import com.lkd.service.ChannelService;
 import com.lkd.service.VendoutRunningService;
 import com.lkd.vo.Pager;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class VendoutRunningServiceImpl extends ServiceImpl<VendoutRunningDao,VendoutRunningEntity> implements VendoutRunningService{
     @Override
@@ -27,6 +37,17 @@ public class VendoutRunningServiceImpl extends ServiceImpl<VendoutRunningDao,Ven
         pageResult.setTotalCount(page.getTotal());
         return pageResult;
     }
+
+    @Autowired
+    private ChannelService channelService;
+
+    @Autowired
+    private VendoutRunningService vendoutRunningService;
+
+    @Autowired
+    private MqttProducer mqttProducer;
+
+
 
     @Override
     public List<VendoutRunningEntity> findList(Map searchMap) {

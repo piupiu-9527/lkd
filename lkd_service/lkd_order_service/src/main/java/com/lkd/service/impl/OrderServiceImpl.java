@@ -59,11 +59,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> implements OrderService {
 
+    @Autowired
+    private MqttProducer mqttProducer;
+
     @Override
     public OrderEntity getByOrderNo(String orderNo) {
         QueryWrapper<OrderEntity> qw = new QueryWrapper<>();
         qw.lambda()
                 .eq(OrderEntity::getOrderNo,orderNo);
+        //qw.last("limit 1");
         return this.getOne(qw);
     }
 
@@ -110,6 +114,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         //保存实体类。返回参数为订单实体类
         this.save(orderEntity);
         return orderEntity;
+    }
+
+    @Override
+    public boolean vendout(String orderNo, Long skuId, String innercode) {
+        VendoutContract vendoutContract = new VendoutContract();
+        VendoutData vendoutData = new VendoutData();
+        vendoutData.setOrderNo(orderNo);
+        vendoutData.setSkuId(skuId);
+        vendoutContract.setVendoutData(vendoutData);
+        vendoutContract.setInnerCode(innercode);
+        //向售货机微服务发送出货请求
+        try {
+            mqttProducer.send(TopicConfig.VMS_VENDOUT_TOPIC,2,vendoutContract);
+        } catch (JsonProcessingException e) {
+            log.info("send vendout req error.",e);
+            return false;
+        }
+
+        return true;
     }
 
 

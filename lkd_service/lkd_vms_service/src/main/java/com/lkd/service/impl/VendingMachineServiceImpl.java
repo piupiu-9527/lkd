@@ -3,6 +3,7 @@ package com.lkd.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,6 +15,8 @@ import com.lkd.config.TopicConfig;
 import com.lkd.contract.SupplyChannel;
 import com.lkd.contract.SupplyContract;
 
+import com.lkd.contract.VendoutContract;
+import com.lkd.contract.VendoutResultContract;
 import com.lkd.dao.VendingMachineDao;
 
 import com.lkd.emq.MqttProducer;
@@ -302,6 +305,75 @@ public class VendingMachineServiceImpl extends ServiceImpl<VendingMachineDao,Ven
 
         }
 
+
+    }
+
+    @Autowired
+    private VendoutRunningService vendoutRunningService;
+
+    @Transactional
+    @Override
+    public Boolean vendout(VendoutContract vendoutContract) {
+        try {
+            //根据售货机编号和商品编号，查询货道编号（有商品库存）
+            QueryWrapper<ChannelEntity> queryWrapper = new QueryWrapper<ChannelEntity>();
+            queryWrapper.lambda()
+                    .eq(ChannelEntity::getInnerCode,vendoutContract.getInnerCode())
+                    .eq(ChannelEntity::getSkuId,vendoutContract.getVendoutData().getSkuId())
+                    .gt(ChannelEntity::getCurrentCapacity,0);
+            //.last("limit 1");
+
+            ChannelEntity channelEntity = channelService.getOne(queryWrapper);
+            if (channelEntity != null) {
+
+                var currentCapacity =channelEntity.getCurrentCapacity() - 1;
+                channelEntity.setCurrentCapacity(currentCapacity);
+                channelService.updateById(channelEntity);
+
+                //存入出货流水数据
+                VendoutRunningEntity vendoutRunningEntity = new VendoutRunningEntity();
+                vendoutRunningEntity.setOrderNo(vendoutContract.getVendoutData().getOrderNo());
+                //出货状态
+                vendoutRunningEntity.setStatus(false);
+                vendoutRunningEntity.setSkuId(vendoutContract.getVendoutData().getSkuId());
+                vendoutRunningService.save(vendoutRunningEntity);
+
+                //发送消息到售货机终端
+                vendoutContract.getVendoutData().setChannelCode(channelEntity.getChannelCode());
+                mqttProducer.send(TopicConfig.getVendoutTopic(vendoutContract.getInnerCode()),2,vendoutContract);
+
+                return true;
+            }else {
+                log.info("缺货，开始退款");
+                return false;
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+
+        return true;
+    }
+
+    @Override
+    public boolean vendoutResult(VendoutResultContract vendoutResultContract) {
+
+        if (!vendoutResultContract.isSuccess()) {//如果出货失败
+            log.info(vendoutResultContract.getInnerCode() + "出货异常");
+            //回滚库存
+            ChannelEntity channelInfo = channelService.getChannelInfo(
+                    vendoutResultContract.getInnerCode(), vendoutResultContract.getVendoutData().getChannelCode());
+            channelInfo.setCurrentCapacity(channelInfo.getCurrentCapacity() + 1); //回滚库存
+            channelService.updateById(channelInfo);
+            return false;
+        } else {
+            //修改出货流程表：status = true,1
+            var uw = Wrappers.<VendoutRunningEntity>lambdaUpdate();
+            uw.eq(VendoutRunningEntity::getOrderNo,
+                    vendoutResultContract.getVendoutData().getOrderNo());
+            uw.set(VendoutRunningEntity::getStatus, true);
+            return vendoutRunningService.update(uw);
+        }
 
     }
 

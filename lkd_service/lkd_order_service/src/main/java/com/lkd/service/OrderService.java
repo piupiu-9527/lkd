@@ -22,6 +22,8 @@ public interface OrderService extends IService<OrderEntity> {
 
     OrderEntity createOrder(PayVO payVO);
 
+    boolean vendout(String orderNo,Long skuId,String innercode);
+
 
 
 }

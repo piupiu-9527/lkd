@@ -91,4 +91,20 @@ public interface VendingMachineService extends IService<VendingMachineEntity> {
 
     void sendSupplyTask(String innerCode);
 
+    /**
+     * @description: 售货机出货逻辑
+     * @author Zle
+     * @date 2022/7/19 15:36
+     * @param vendoutContract 出货协议对象
+     * @return Boolean
+     */
+    Boolean vendout(VendoutContract vendoutContract);
+
+    /**
+     * 出货结果
+     * @param VendoutResultContract
+     * @return
+     */
+    boolean vendoutResult(VendoutResultContract VendoutResultContract);
+
 }

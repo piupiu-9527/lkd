@@ -1,6 +1,7 @@
 package com.lkd.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lkd.contract.VendoutContract;
 import com.lkd.entity.VendoutRunningEntity;
 import com.lkd.vo.Pager;
 
@@ -23,4 +24,6 @@ public interface VendoutRunningService extends IService<VendoutRunningEntity> {
      * @return
      */
     Pager<VendoutRunningEntity> findPage(long pageIndex, long pageSize, Map searchMap);
+
+
 }
